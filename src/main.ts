@@ -9,10 +9,11 @@ import { ENCRYPTED_CODE_PREFIX, CodeBlockType, EncryptedTextType } from 'Constan
 
 export default class InlineEncrypterPlugin extends Plugin {
 	settings: InlineEncrypterPluginSettings;
-	cryptoFactory = new CryptoFactory();
+	cryptoFactory: CryptoFactory
 
 	async onload() {
 		await this.loadSettings();
+		this.cryptoFactory = new CryptoFactory(this.settings);
 		this.addSettingTab(new InlineEncrypterSettingTab(this.app, this));
 
 		this.registerMarkdownPostProcessor((el,ctx) => this.processEncryptedInlineCodeBlockProcessor(el, ctx));
@@ -21,28 +22,28 @@ export default class InlineEncrypterPlugin extends Plugin {
 
 		this.addCommand({
 			id: 'encrypt',
-			name: 'Encrypt selected text',
+			name: 'Шифровать выбранный текст',
 			icon: 'lock',
 			editorCallback: (editor: Editor, view: MarkdownView) => this.processInlineEncryptCommand(editor, CodeBlockType.Inline, EncryptedTextType.Inline)
 		});
 
 		this.addCommand({
 			id: 'encrypt-code',
-			name: 'Encrypt selected text as code block',
+			name: 'Шифровать выбранный текст как блок кода',
 			icon: 'lock',
 			editorCallback: (editor: Editor, view: MarkdownView) => this.processInlineEncryptCommand(editor, CodeBlockType.Common, EncryptedTextType.Inline)
 		});
 
 		this.addCommand({
 			id: 'encrypt-pre',
-			name: 'Insert pre-encrypted text',
+			name: 'Шифровать и вставить текст',
 			icon: 'lock',
 			editorCallback: (editor: Editor, view: MarkdownView) => this.processInlineEncryptCommand(editor, CodeBlockType.Inline, EncryptedTextType.PreEncrypted)
 		});
 
 		this.addCommand({
 			id: 'decrypt',
-			name: 'Decrypt selected text',
+			name: 'Дешифровать выделенный текст',
 			icon: 'lock',
 			editorCallback: (editor: Editor, view: MarkdownView) => this.processInlineDecryptCommand(editor)
 		});
@@ -66,24 +67,15 @@ export default class InlineEncrypterPlugin extends Plugin {
 		if (textType === EncryptedTextType.Inline) {
 			if (editor.somethingSelected()) {
 				const input = editor.getSelection();
-				const passModal = new ModalPassword(this.app, textType);
-				passModal.onClose = async () => {
-					if (!passModal.isPassword) {
-						return;
-					}
-					const output = await this.cryptoFactory.encryptToBase64(input, passModal.password);
-					if (codeBlockType === CodeBlockType.Inline) {
-						editor.replaceSelection('`' + ENCRYPTED_CODE_PREFIX + ' ' + output + '`');
-					}
-					if (codeBlockType === CodeBlockType.Common) {
-						editor.replaceSelection('```' + ENCRYPTED_CODE_PREFIX + '\n' + output + '\n```');
-					}
-					if (passModal.password.length === 0) {
-						new Notice('⚠️ Password is empty');
-					}
-					new Notice('✅ Text encrypted');				
+				const output = await this.cryptoFactory.encryptToBase64(input);
+				if (codeBlockType === CodeBlockType.Inline) {
+					editor.replaceSelection('`' + ENCRYPTED_CODE_PREFIX + ' ' + output + '`');
 				}
-				passModal.open();
+				if (codeBlockType === CodeBlockType.Common) {
+					editor.replaceSelection('```' + ENCRYPTED_CODE_PREFIX + '\n' + output + '\n```');
+				}
+				new Notice('✅ Text encrypted');				
+
 			} else {
 				new Notice('❌ No selected text for encryption');
 			}
@@ -93,23 +85,17 @@ export default class InlineEncrypterPlugin extends Plugin {
 			passModal.onClose = async () => {
 				const input = passModal.input;
 				if (input.length > 0) {
-					if (!passModal.isPassword) {
-						return;
-					}
-					const output = await this.cryptoFactory.encryptToBase64(input, passModal.password);
+					const output = await this.cryptoFactory.encryptToBase64(input);
 					if (codeBlockType === CodeBlockType.Inline) {
 						editor.replaceSelection('`' + ENCRYPTED_CODE_PREFIX + ' ' + output + '`');
 					}
 					if (codeBlockType === CodeBlockType.Common) {
 						editor.replaceSelection('```' + ENCRYPTED_CODE_PREFIX + '\n' + output + '\n```');
 					}
-					if (passModal.password.length === 0) {
-						new Notice('⚠️ Password is empty');
-					}
-					new Notice('✅ Text encrypted');				
+					new Notice('✅ Текст зашифрован');				
 				}
 				else {
-					new Notice('❌ No text for encryption');	
+					new Notice('❌ Нет текста для шифрования');	
 				}
 			}
 			passModal.open();		
@@ -121,22 +107,19 @@ export default class InlineEncrypterPlugin extends Plugin {
 			let input = editor.getSelection();
 			const passModal = new ModalPassword(this.app, EncryptedTextType.Inline);
 			passModal.onClose = async () => {
-				if (!passModal.isPassword) {
-					return;
-				}
 				input = input.replace(ENCRYPTED_CODE_PREFIX, '').replace(/`/g, '').replace(/\s/g, '').replace(/\r?\n|\r/g, '');
-				const output = await this.cryptoFactory.decryptFromBase64(input, passModal.password);
+				const output = await this.cryptoFactory.decryptFromBase64(input);
 				if (output === null) {
-					new Notice('❌ Decryption failed!');
+					new Notice('❌ Ошибка дешифрования!');
 					return;
 				} else {
 					editor.replaceSelection(output);
-					new Notice('✅ Text decrypted')
+					new Notice('✅ Текст дешифрован')
 				}
 			}
 			passModal.open();
 		} else {
-			new Notice('❌ No selected text for decryption');
+			new Notice('❌ Не выбран текст для дешифрования');
 		}
     }
 

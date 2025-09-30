@@ -1,13 +1,10 @@
 {
-	"id": "inline-encrypter",
-	"name": "Inline Encrypter",
-	"version": "1.1.7",
+	"id": "inline-encrypter-ezhov",
+	"name": "Шифрование данных",
+	"version": "0.0.1",
 	"minAppVersion": "1.1.1",
-	"description": "Encrypt secrets in your notes.",
-	"author": "Alexander Cheryomukhin",
-	"authorUrl": "https://github.com/solargate",
-	"fundingUrl": {
-		"Donations": "https://github.com/solargate/obsidian-inline-encrypter/blob/master/DONATIONS.md"
-	},
+	"description": "Шифрование в заметках",
+	"author": "Denis Ezhov. Thanks Alexander Cheryomukhin",
+	"authorUrl": "https://github.com/ezhov-da",
 	"isDesktopOnly": false
 }

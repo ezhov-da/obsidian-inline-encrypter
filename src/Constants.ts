@@ -1,4 +1,4 @@
-export const ENCRYPTED_CODE_PREFIX = 'secret'
+export const ENCRYPTED_CODE_PREFIX = 'ezh-secret'
 
 export enum CodeBlockType {
 	Inline,

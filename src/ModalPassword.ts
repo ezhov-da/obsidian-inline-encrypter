@@ -3,14 +3,12 @@ import { App, Modal, Setting, TextAreaComponent } from 'obsidian';
 import { EncryptedTextType } from 'Constants';
 
 export class ModalPassword extends Modal {
-	password: string;
 	input: string;
 	isPassword: boolean;
 	textType: EncryptedTextType;
 
 	constructor(app: App, textType: EncryptedTextType) {
 		super(app);
-		this.password = '';
 		this.input = '';
 		this.textType = textType;
 	}
@@ -20,34 +18,12 @@ export class ModalPassword extends Modal {
 		let textArea: TextAreaComponent;
 
 		if (this.textType === EncryptedTextType.PreEncrypted) {
-			contentEl.createEl("h1", {text: "Enter password and text for encryption"});
+			contentEl.createEl("h1", {text: "Введите текст для шифрования"});
 		}
-		else {
-			contentEl.createEl("h1", {text: "Enter password"});
-		}
-
-		new Setting(contentEl).setName("Password").addText((text) => {
-			text.inputEl.type = 'password';
-			text.inputEl.addEventListener("keypress", (event) => {
-				if (event.key === 'Enter') {
-					this.passwordOk();
-				}
-			});
-			text.onChange((value) => this.password = value);
-		});
-
-		new Setting(contentEl).setName("Show password").addToggle((toggle) =>
-			toggle.setValue(false).onChange((value) => {
-				const input = this.contentEl.querySelector("input");
-				if (input) {
-					input.type = value ? 'text' : 'password';
-				}
-			})
-		);
 
 		if (this.textType === EncryptedTextType.PreEncrypted) {
 			contentEl.classList.add('inline-encrypter-encrypt-text-modal');
-			new Setting(contentEl).setName("Text to encrypt").addTextArea(cb => {
+			new Setting(contentEl).setName("Текст для шифрования").addTextArea(cb => {
 				textArea = cb;
 				cb.setValue(this.input);
 				cb.inputEl.readOnly = false;
